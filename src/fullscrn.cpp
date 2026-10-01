@@ -57,7 +57,7 @@ int fullscrn::enableFullscreen()
 {
 	if (!display_changed)
 	{
-		if (SDL_SetWindowFullscreen(winmain::MainWindow, SDL_WINDOW_FULLSCREEN_DESKTOP) == 0)
+		if (SDL_SetWindowFullscreen(winmain::MainWindow, true) == 0)
 		{
 			display_changed = 1;
 			return 1;
@@ -109,7 +109,7 @@ int fullscrn::GetMaxResolution()
 void fullscrn::window_size_changed()
 {
 	int width, height;
-	SDL_GetRendererOutputSize(winmain::Renderer, &width, &height);
+	SDL_GetCurrentRenderOutputSize(winmain::Renderer, &width, &height);
 	int menuHeight = options::Options.ShowMenu ? winmain::MainMenuHeight : 0;
 	height -= menuHeight;
 	auto res = &resolution_array[resolution];
@@ -134,10 +134,10 @@ void fullscrn::window_size_changed()
 	OffsetX = offset2X / 2;
 	OffsetY = offset2Y / 2;
 
-	render::DestinationRect = SDL_Rect
+	render::DestinationRect = SDL_FRect
 	{
-		OffsetX, OffsetY + menuHeight,
-		width - offset2X, height - offset2Y
+		(float)OffsetX, (float)(OffsetY + menuHeight),
+		(float)(width - offset2X), (float)(height - offset2Y)
 	};
 }
 

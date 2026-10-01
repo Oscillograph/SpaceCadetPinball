@@ -41,6 +41,10 @@ enum class InputTypes
 	GameController,
 };
 
+#ifndef MIX_MAX_VOLUME
+	#define MIX_MAX_VOLUME	 128
+#endif
+
 struct GameInput
 {
 	InputTypes Type;

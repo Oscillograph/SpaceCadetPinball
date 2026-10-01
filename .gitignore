@@ -300,3 +300,7 @@ _deps
 build.ninja
 # Build directory
 /build
+/full
+
+# Clangd cache
+.cache

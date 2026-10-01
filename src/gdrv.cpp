@@ -1,3 +1,4 @@
+#include "SDL_gpu.h"
 #include "pch.h"
 #include "gdrv.h"
 
@@ -123,14 +124,13 @@ void gdrv_bitmap8::ScaleIndexed(float scaleX, float scaleY)
 	BmpBufPtr1 = new ColorRgba[Stride * Height];
 }
 
-void gdrv_bitmap8::CreateTexture(const char* scaleHint, int access)
+void gdrv_bitmap8::CreateTexture(const char* scaleHint, SDL_TextureAccess access)
 {
 	if (Texture != nullptr)
 	{
 		SDL_DestroyTexture(Texture);
 	}
 
-	UsingSdlHint hint{ SDL_HINT_RENDER_SCALE_QUALITY, scaleHint };
 	Texture = SDL_CreateTexture
 	(
 		winmain::Renderer,
@@ -138,6 +138,7 @@ void gdrv_bitmap8::CreateTexture(const char* scaleHint, int access)
 		access,
 		Width, Height
 	);
+	SDL_SetTextureScaleMode(Texture, SDL_SCALEMODE_NEAREST);
 	SDL_SetTextureBlendMode(Texture, SDL_BLENDMODE_NONE);
 }
 

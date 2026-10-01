@@ -17,7 +17,7 @@ int render::zmap_offsetX, render::zmap_offsetY, render::offset_x, render::offset
 rectangle_type render::vscreen_rect;
 gdrv_bitmap8 *render::vscreen, *render::background_bitmap, *render::ball_bitmap[20];
 zmap_header_type* render::zscreen;
-SDL_Rect render::DestinationRect{};
+SDL_FRect render::DestinationRect{};
 
 render_sprite::render_sprite(VisualTypes visualType, gdrv_bitmap8* bmp, zmap_header_type* zMap,
 	int xPosition, int yPosition, rectangle_type* boundingRect)
@@ -458,24 +458,24 @@ void render::PresentVScreen()
 
 	if (offset_x == 0 && offset_y == 0)
 	{
-		SDL_RenderCopy(winmain::Renderer, vscreen->Texture, nullptr, &DestinationRect);
+		SDL_RenderTexture(winmain::Renderer, vscreen->Texture, nullptr, &DestinationRect);
 	}
 	else
 	{
 		auto tableWidthCoef = static_cast<float>(pb::MainTable->Width) / vscreen->Width;
-		auto srcSeparationX = static_cast<int>(round(vscreen->Width * tableWidthCoef));
-		auto srcBoardRect = SDL_Rect
+		auto srcSeparationX = round(vscreen->Width * tableWidthCoef);
+		auto srcBoardRect = SDL_FRect
 		{
 			0, 0,
-			srcSeparationX, vscreen->Height
+			srcSeparationX, (float)vscreen->Height
 		};
-		auto srcSidebarRect = SDL_Rect
+		auto srcSidebarRect = SDL_FRect
 		{
 			srcSeparationX, 0,
-			vscreen->Width - srcSeparationX, vscreen->Height
+			vscreen->Width - srcSeparationX, (float)vscreen->Height
 		};
 
-#if SDL_VERSION_ATLEAST(2, 0, 10)
+#if SDL_VERSION_ATLEAST(3, 0, 10)
 		// SDL_RenderCopyF was added in 2.0.10
 		auto dstSeparationX = DestinationRect.w * tableWidthCoef;
 		auto dstBoardRect = SDL_FRect
@@ -490,8 +490,8 @@ void render::PresentVScreen()
 			DestinationRect.w - dstSeparationX, static_cast<float>(DestinationRect.h)
 		};
 
-		SDL_RenderCopyF(winmain::Renderer, vscreen->Texture, &srcBoardRect, &dstBoardRect);
-		SDL_RenderCopyF(winmain::Renderer, vscreen->Texture, &srcSidebarRect, &dstSidebarRect);
+		SDL_RenderTexture(winmain::Renderer, vscreen->Texture, &srcBoardRect, &dstBoardRect);
+		SDL_RenderTexture(winmain::Renderer, vscreen->Texture, &srcSidebarRect, &dstSidebarRect);
 #else
 		// SDL_RenderCopy cannot express sub pixel offset.
 		// Vscreen shift is required for that.

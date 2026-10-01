@@ -2,6 +2,8 @@
 
 #include "SDL.h"
 
+#include "SDL_oldnames.h"
+#include "SDL_pixels.h"
 #include "imgui.h"
 
 #include <map>
@@ -190,16 +192,16 @@ namespace
 		{
 			Clip = rect;
 			const SDL_Rect clip = { rect.X, rect.Y, rect.Width, rect.Height };
-			SDL_RenderSetClipRect(Renderer, &clip);
+			SDL_SetRenderClipRect(Renderer, &clip);
 		}
 
 		void EnableClip() { SetClipRect(Clip); }
-		void DisableClip() { SDL_RenderSetClipRect(Renderer, nullptr); }
+		void DisableClip() { SDL_SetRenderClipRect(Renderer, nullptr); }
 
 		void SetAt(int x, int y, const Color& color)
 		{
 			color.UseAsDrawColor(Renderer);
-			SDL_RenderDrawPoint(Renderer, x, y);
+			SDL_RenderPoint(Renderer, x, y);
 		}
 
 		SDL_Texture* MakeTexture(int width, int height)
@@ -227,7 +229,7 @@ namespace
 
 		~Texture()
 		{
-			SDL_FreeSurface(Surface);
+			SDL_DestroySurface(Surface);
 			SDL_DestroyTexture(Source);
 		}
 
@@ -402,8 +404,8 @@ namespace
 
 	void DrawCachedTriangle(const Device::TriangleCacheItem& triangle, const FixedPointTriangleRenderInfo& renderInfo)
 	{
-		const SDL_Rect destination = { renderInfo.MinX, renderInfo.MinY, triangle.Width, triangle.Height };
-		SDL_RenderCopy(CurrentDevice->Renderer, triangle.Texture, nullptr, &destination);
+		const SDL_FRect destination = { (float)renderInfo.MinX, (float)renderInfo.MinY, (float)triangle.Width, (float)triangle.Height };
+		SDL_RenderTexture(CurrentDevice->Renderer, triangle.Texture, nullptr, &destination);
 	}
 
 	void DrawTriangle(const ImDrawVert& v1, const ImDrawVert& v2, const ImDrawVert& v3, const Texture* texture)
@@ -443,8 +445,8 @@ namespace
 
 		if (!cached->Texture) return;
 
-		const SDL_Rect destination = { renderInfo.MinX, renderInfo.MinY, cached->Width, cached->Height };
-		SDL_RenderCopy(CurrentDevice->Renderer, cached->Texture, nullptr, &destination);
+		const SDL_FRect destination = { (float)renderInfo.MinX, (float)renderInfo.MinY, (float)cached->Width, (float)cached->Height };
+		SDL_RenderTexture(CurrentDevice->Renderer, cached->Texture, nullptr, &destination);
 
 		CurrentDevice->GenericTriangleCache.Insert(key, std::move(cached));
 	}
@@ -473,8 +475,8 @@ namespace
 
 		if (!cached->Texture) return;
 
-		const SDL_Rect destination = { renderInfo.MinX, renderInfo.MinY, cached->Width, cached->Height };
-		SDL_RenderCopy(CurrentDevice->Renderer, cached->Texture, nullptr, &destination);
+		const SDL_FRect destination = { (float)renderInfo.MinX, (float)renderInfo.MinY, (float)cached->Width, (float)cached->Height };
+		SDL_RenderTexture(CurrentDevice->Renderer, cached->Texture, nullptr, &destination);
 
 		CurrentDevice->UniformColorTriangleCache.Insert(key, std::move(cached));
 	}
@@ -483,11 +485,11 @@ namespace
 	{
 		// We are safe to assume uniform color here, because the caller checks it and and uses the triangle renderer to render those.
 
-		const SDL_Rect destination = {
-			static_cast<int>(bounding.MinX),
-			static_cast<int>(bounding.MinY),
-			static_cast<int>(bounding.MaxX - bounding.MinX),
-			static_cast<int>(bounding.MaxY - bounding.MinY)
+		const SDL_FRect destination = {
+			static_cast<float>(bounding.MinX),
+			static_cast<float>(bounding.MinY),
+			static_cast<float>(bounding.MaxX - bounding.MinX),
+			static_cast<float>(bounding.MaxY - bounding.MinY)
 		};
 
 		// If the area isn't textured, we can just draw a rectangle with the correct color.
@@ -500,17 +502,17 @@ namespace
 		{
 			// We can now just calculate the correct source rectangle and draw it.
 
-			const SDL_Rect source = {
-				static_cast<int>(bounding.MinU * textureWidth),
-				static_cast<int>(bounding.MinV * textureHeight),
-				static_cast<int>((bounding.MaxU - bounding.MinU) * textureWidth),
-				static_cast<int>((bounding.MaxV - bounding.MinV) * textureHeight)
+			const SDL_FRect source = {
+				static_cast<float>(bounding.MinU * textureWidth),
+				static_cast<float>(bounding.MinV * textureHeight),
+				static_cast<float>((bounding.MaxU - bounding.MinU) * textureWidth),
+				static_cast<float>((bounding.MaxV - bounding.MinV) * textureHeight)
 			};
 
-			const SDL_RendererFlip flip = static_cast<SDL_RendererFlip>((doHorizontalFlip ? SDL_FLIP_HORIZONTAL : 0) | (doVerticalFlip ? SDL_FLIP_VERTICAL : 0));
+			const SDL_FlipMode flip = static_cast<SDL_FlipMode>((doHorizontalFlip ? SDL_FLIP_HORIZONTAL : 0) | (doVerticalFlip ? SDL_FLIP_VERTICAL : 0));
 
 			SDL_SetTextureColorMod(texture, static_cast<uint8_t>(color.R * 255), static_cast<uint8_t>(color.G * 255), static_cast<uint8_t>(color.B * 255));
-			SDL_RenderCopyEx(CurrentDevice->Renderer, texture, &source, &destination, 0.0, nullptr, flip);
+			SDL_RenderTextureRotated(CurrentDevice->Renderer, texture, &source, &destination, 0.0, nullptr, flip);
 		}
 	}
 
@@ -521,16 +523,16 @@ namespace
 
 	void DrawRectangle(const Rect& bounding, SDL_Texture* texture, const Color& color, bool doHorizontalFlip, bool doVerticalFlip)
 	{
-		int width, height;
-		SDL_QueryTexture(texture, nullptr, nullptr, &width, &height);
+		float width, height;
+		SDL_GetTextureSize(texture, &width, &height);
 		DrawRectangle(bounding, texture, width, height, color, doHorizontalFlip, doVerticalFlip);
 	}
 }
 
 namespace ImGuiSDL
 {
-	static int ImGuiSDLEventWatch(void* userdata, SDL_Event* event) {
-		if (event->type == SDL_RENDER_TARGETS_RESET) {
+	static bool ImGuiSDLEventWatch(void* userdata, SDL_Event* event) {
+		if (event->type == SDL_EVENT_RENDER_TARGETS_RESET) {
 			// Device lost event, applies to DirectX and some mobile devices.
 			CurrentDevice->CacheWasInvalidated = true;
 		}
@@ -557,8 +559,8 @@ namespace ImGuiSDL
 		unsigned char* pixels;
 		int width, height;
 		io.Fonts->GetTexDataAsRGBA32(&pixels, &width, &height);
-		static constexpr uint32_t rmask = 0x000000ff, gmask = 0x0000ff00, bmask = 0x00ff0000, amask = 0xff000000;
-		SDL_Surface* surface = SDL_CreateRGBSurfaceFrom(pixels, width, height, 32, 4 * width, rmask, gmask, bmask, amask);
+		// static constexpr uint32_t rmask = 0x000000ff, gmask = 0x0000ff00, bmask = 0x00ff0000, amask = 0xff000000;
+		SDL_Surface* surface = SDL_CreateSurfaceFrom(width, height, SDL_PIXELFORMAT_ABGR8888, pixels, 4*width);
 
 		Texture* texture = new Texture();
 		texture->Surface = surface;
@@ -577,7 +579,7 @@ namespace ImGuiSDL
 		delete texture;
 
 		delete CurrentDevice;
-		SDL_DelEventWatch(ImGuiSDLEventWatch, nullptr);
+		SDL_RemoveEventWatch(ImGuiSDLEventWatch, nullptr);
 	}
 
 	void Render(ImDrawData* drawData)
@@ -595,9 +597,9 @@ namespace ImGuiSDL
 		Uint8 initialR, initialG, initialB, initialA;
 		SDL_GetRenderDrawColor(CurrentDevice->Renderer, &initialR, &initialG, &initialB, &initialA);
 
-		SDL_bool initialClipEnabled = SDL_RenderIsClipEnabled(CurrentDevice->Renderer);
+		bool initialClipEnabled = SDL_RenderClipEnabled(CurrentDevice->Renderer);
 		SDL_Rect initialClipRect;
-		SDL_RenderGetClipRect(CurrentDevice->Renderer, &initialClipRect);
+		SDL_GetRenderClipRect(CurrentDevice->Renderer, &initialClipRect);
 
 		SDL_Texture* initialRenderTarget = SDL_GetRenderTarget(CurrentDevice->Renderer);
 
@@ -700,7 +702,7 @@ namespace ImGuiSDL
 
 		SDL_SetRenderTarget(CurrentDevice->Renderer, initialRenderTarget);
 
-		SDL_RenderSetClipRect(CurrentDevice->Renderer, initialClipEnabled ? &initialClipRect : nullptr);
+		SDL_SetRenderClipRect(CurrentDevice->Renderer, initialClipEnabled ? &initialClipRect : nullptr);
 
 		SDL_SetRenderDrawColor(CurrentDevice->Renderer,
 			initialR, initialG, initialB, initialA);

@@ -34,17 +34,20 @@
 //#include <array>
 
 #define SDL_MAIN_HANDLED
-#include "SDL.h"
+#include <SDL.h>
+#include <SDL_main.h>
+#include <SDL_render.h>
 #include <SDL_mixer.h>
 
+// TODO: Figure out what's broken due to MIX_INIT_MID no longer available in SDL3
 // MIX_INIT_FLUIDSYNTH was renamed to MIX_INIT_MID in SDL_mixer v2.0.2
 // Older versions of SDL_mixer did not have SDL_MIXER_VERSION_ATLEAST
-constexpr int MIX_INIT_MID_Proxy =
-#if SDL_VERSIONNUM(SDL_MIXER_MAJOR_VERSION, SDL_MIXER_MINOR_VERSION, SDL_MIXER_PATCHLEVEL) >= SDL_VERSIONNUM(2, 0, 2)
-	MIX_INIT_MID;
-#else
-	MIX_INIT_FLUIDSYNTH;
-#endif
+constexpr int MIX_INIT_MID_Proxy = 0;
+// #if SDL_VERSIONNUM(SDL_MIXER_MAJOR_VERSION, SDL_MIXER_MINOR_VERSION, SDL_MIXER_PATCHLEVEL) >= SDL_VERSIONNUM(3, 0, 2)
+// 	MIX_INIT_MID;
+// #else
+	// MIX_INIT_FLUIDSYNTH;
+// #endif
 
 //https://github.com/ocornut/imgui 59b63defe5421642fb0cdcfd1fa850fc85a13791 + patches
 #include "imgui.h"

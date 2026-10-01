@@ -21,9 +21,9 @@
 
 gdrv_bitmap8* DebugOverlay::dbScreen = nullptr;
 
-static int SDL_RenderDrawCircle(SDL_Renderer* renderer, int x, int y, int radius)
+static int SDL_RenderDrawCircle(SDL_Renderer* renderer, float x, float y, int radius)
 {
-	SDL_Point points[256];
+	SDL_FPoint points[256];
 	int pointCount = 0;
 	int offsetx, offsety, d;
 	int status;
@@ -37,7 +37,7 @@ static int SDL_RenderDrawCircle(SDL_Renderer* renderer, int x, int y, int radius
 	{
 		if (pointCount + 8 > 256)
 		{
-			status = SDL_RenderDrawPoints(renderer, points, pointCount);
+			status = SDL_RenderPoints(renderer, points, pointCount);
 			pointCount = 0;
 
 			if (status < 0) {
@@ -71,7 +71,7 @@ static int SDL_RenderDrawCircle(SDL_Renderer* renderer, int x, int y, int radius
 	}
 
 	if (pointCount > 0)
-		status = SDL_RenderDrawPoints(renderer, points, pointCount);
+		status = SDL_RenderPoints(renderer, points, pointCount);
 
 	return status;
 }
@@ -136,7 +136,7 @@ void DebugOverlay::DrawOverlay()
 	SDL_BlendMode blendMode;
 	SDL_GetRenderDrawBlendMode(winmain::Renderer, &blendMode);
 	SDL_SetRenderDrawBlendMode(winmain::Renderer, SDL_BLENDMODE_BLEND);
-	SDL_RenderCopy(winmain::Renderer, dbScreen->Texture, nullptr, &render::DestinationRect);
+	SDL_RenderTexture(winmain::Renderer, dbScreen->Texture, nullptr, &render::DestinationRect);
 	SDL_SetRenderDrawBlendMode(winmain::Renderer, blendMode);
 }
 
@@ -152,7 +152,7 @@ void DebugOverlay::DrawBoxGrid()
 		boxPt.Y = edgeMan.MaxBoxY * edgeMan.AdvanceY + edgeMan.MinY;
 		auto pt2 = proj::xform_to_2d(boxPt);
 
-		SDL_RenderDrawLine(winmain::Renderer, pt1.X, pt1.Y, pt2.X, pt2.Y);
+		SDL_RenderLine(winmain::Renderer, pt1.X, pt1.Y, pt2.X, pt2.Y);
 	}
 	for (int y = 0; y <= edgeMan.MaxBoxY; y++)
 	{
@@ -161,7 +161,7 @@ void DebugOverlay::DrawBoxGrid()
 		boxPt.X = edgeMan.MaxBoxX * edgeMan.AdvanceX + edgeMan.MinX;
 		auto pt2 = proj::xform_to_2d(boxPt);
 
-		SDL_RenderDrawLine(winmain::Renderer, pt1.X, pt1.Y, pt2.X, pt2.Y);
+		SDL_RenderLine(winmain::Renderer, pt1.X, pt1.Y, pt2.X, pt2.Y);
 	}
 }
 
@@ -219,7 +219,7 @@ void DebugOverlay::DrawBallInfo()
 				auto nextPos = ballPosition;
 				maths::vector_add(nextPos, maths::vector_mul(ball->Direction, ball->Speed / 10.0f));
 				auto pt2 = proj::xform_to_2d(nextPos);
-				SDL_RenderDrawLine(winmain::Renderer, pt1.X, pt1.Y, pt2.X, pt2.Y);
+				SDL_RenderLine(winmain::Renderer, pt1.X, pt1.Y, pt2.X, pt2.Y);
 			}
 		}
 	}
@@ -235,8 +235,8 @@ void DebugOverlay::DrawAllSprites()
 			auto& bmpR = cmp->RenderSprite->BmpRect;
 			if (bmpR.Width != 0 && bmpR.Height != 0)
 			{
-				SDL_Rect rect{ bmpR.XPosition, bmpR.YPosition, bmpR.Width, bmpR.Height };
-				SDL_RenderDrawRect(winmain::Renderer, &rect);
+				SDL_FRect rect{ (float)bmpR.XPosition, (float)bmpR.YPosition, (float)bmpR.Width, (float)bmpR.Height };
+				SDL_RenderRect(winmain::Renderer, &rect);
 			}
 		}
 	}
@@ -271,8 +271,8 @@ void DebugOverlay::DrawBallDepthSteps()
 			// Snap X coordinate to edge box sides
 			auto x1 = proj::xform_to_2d(vector2{edgeMan.MinX, depthPt->Y}).X;
 			auto x2 = proj::xform_to_2d(vector2{edgeMan.MaxBoxX * edgeMan.AdvanceX + edgeMan.MinX, depthPt->Y}).X;
-			auto ff =  proj::xform_to_2d(vector2{ edgeMan.MaxBoxX * edgeMan.AdvanceX + edgeMan.MinX, depthPt->Y });
-			SDL_RenderDrawLine(winmain::Renderer, x1, pt.Y, x2, pt.Y);
+			// auto ff =  proj::xform_to_2d(vector2{ edgeMan.MaxBoxX * edgeMan.AdvanceX + edgeMan.MinX, depthPt->Y });
+			SDL_RenderLine(winmain::Renderer, x1, pt.Y, x2, pt.Y);
 		}
 		break;
 	}
@@ -289,8 +289,8 @@ void DebugOverlay::DrawComponentAabb()
 			const auto& aabb = collCmp->AABB;
 			auto pt1 = proj::xform_to_2d(vector2{ aabb.XMax, aabb.YMax });
 			auto pt2 = proj::xform_to_2d(vector2{ aabb.XMin, aabb.YMin });
-			SDL_Rect rect{ pt2.X,pt2.Y, pt1.X - pt2.X , pt1.Y - pt2.Y };
-			SDL_RenderDrawRect(winmain::Renderer, &rect);
+			SDL_FRect rect{ (float)pt2.X, (float)pt2.Y, (float)(pt1.X - pt2.X) , (float)(pt1.Y - pt2.Y) };
+			SDL_RenderRect(winmain::Renderer, &rect);
 		}
 	}
 }
@@ -310,7 +310,7 @@ void DebugOverlay::DrawLineType(line_type& line)
 	auto pt1 = proj::xform_to_2d(line.Origin);
 	auto pt2 = proj::xform_to_2d(line.End);
 
-	SDL_RenderDrawLine(winmain::Renderer, pt1.X, pt1.Y, pt2.X, pt2.Y);
+	SDL_RenderLine(winmain::Renderer, pt1.X, pt1.Y, pt2.X, pt2.Y);
 }
 
 void DebugOverlay::DrawEdge(TEdgeSegment* edge)

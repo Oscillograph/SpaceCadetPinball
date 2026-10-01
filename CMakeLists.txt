@@ -28,7 +28,10 @@ endforeach()
 
 add_executable(${PROJECT_NAME} ${SOURCE_FILES})
 
-target_include_directories(${PROJECT_NAME} PRIVATE ${PROJECT_BASE_SOURCE_DIR}/src)
+target_include_directories(${PROJECT_NAME} PRIVATE
+    ${PROJECT_BASE_SOURCE_DIR}/src
+    ${PROJECT_EXTERNAL_DIR}
+    )
 
 # Skip pch on foreign code
 set_source_files_properties(
@@ -61,7 +64,7 @@ endif()
 #     "${GCC_GLOBAL_COMPILER_SETTINGS}"
 # )
 
-list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_LIST_DIR}/CMakeModules")
+list(APPEND CMAKE_MODULE_PATH "${PROJECT_BASE_SOURCE_DIR}/CMakeModules")
 
 if(WIN32)
     include(${PROJECT_BASE_SOURCE_DIR}/cmake/build-on-windows.cmake)
