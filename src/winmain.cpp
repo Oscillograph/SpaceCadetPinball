@@ -121,8 +121,9 @@ int winmain::WinMain(LPCSTR lpCmdLine)
 			printf("Could not initialize SDL MIDI, music might not work.\nSDL Error: %s\n", SDL_GetError());
 			SDL_ClearError();
 		}
-		SDL_AudioSpec audioSpec = {SDL_AUDIO_S16LE, 2, 1024};
-		if (MIX_CreateMixerDevice(SDL_AUDIO_DEVICE_DEFAULT_PLAYBACK, &audioSpec) == NULL)
+		// SDL_AudioSpec audioSpec = {SDL_AUDIO_S16LE, 2, 1024};
+		Sound::mixer = MIX_CreateMixerDevice(SDL_AUDIO_DEVICE_DEFAULT_PLAYBACK, NULL);
+		if (!Sound::mixer)
 		// if (MIX_CreateMixerDevice(SDL_AUDIO_DEVICE_DEFAULT_PLAYBACK, NULL))
 		{
 			printf("Could not open audio device, continuing without audio.\nSDL Error: %s\n", SDL_GetError());

@@ -16,6 +16,7 @@ class Sound
 public:
 	static std::vector<ChannelInfo> Channels;
 	static std::unordered_map<int, MIX_Track*> Tracks;
+	static MIX_Mixer* mixer;
 
 	static void Init(bool mixOpen, int channels, bool enableFlag, float volume);
 	static void Enable(bool enableFlag);
@@ -34,5 +35,4 @@ private:
 	static bool enabled_flag;
 	static float Volume;
 	static bool MixOpen;
-	static MIX_Mixer* mixer;
 };

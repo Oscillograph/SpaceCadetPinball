@@ -184,7 +184,10 @@ void Sound::SetChannels(int channels)
 	Channels.resize(num_channels);
 	if (MixOpen)
 	{
-		mixer = MIX_CreateMixerDevice(SDL_AUDIO_DEVICE_DEFAULT_PLAYBACK, NULL);
+		if (!mixer)
+		{
+			mixer = MIX_CreateMixerDevice(SDL_AUDIO_DEVICE_DEFAULT_PLAYBACK, NULL);
+		}
 
 		for (int i = 0; i < num_channels; ++i)
 		{
