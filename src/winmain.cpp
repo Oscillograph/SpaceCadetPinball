@@ -122,7 +122,8 @@ int winmain::WinMain(LPCSTR lpCmdLine)
 			SDL_ClearError();
 		}
 		SDL_AudioSpec audioSpec = {SDL_AUDIO_S16LE, 2, 1024};
-		if (MIX_CreateMixerDevice(SDL_AUDIO_DEVICE_DEFAULT_PLAYBACK, &audioSpec))
+		if (MIX_CreateMixerDevice(SDL_AUDIO_DEVICE_DEFAULT_PLAYBACK, &audioSpec) == NULL)
+		// if (MIX_CreateMixerDevice(SDL_AUDIO_DEVICE_DEFAULT_PLAYBACK, NULL))
 		{
 			printf("Could not open audio device, continuing without audio.\nSDL Error: %s\n", SDL_GetError());
 			SDL_ClearError();
