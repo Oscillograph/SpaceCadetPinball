@@ -129,7 +129,7 @@ void ImGui_ImplSDLRenderer_RenderDrawData(ImDrawData* draw_data)
         SDL_Rect    ClipRect;
     };
     BackupSDLRendererState old = {};
-    old.ClipEnabled = SDL_RenderClipEnabled(bd->SDLRenderer) == true;
+    old.ClipEnabled = SDL_RenderClipEnabled(bd->SDLRenderer);
     SDL_GetRenderViewport(bd->SDLRenderer, &old.Viewport);
     SDL_GetRenderClipRect(bd->SDLRenderer, &old.ClipRect);
 
@@ -194,8 +194,9 @@ void ImGui_ImplSDLRenderer_RenderDrawData(ImDrawData* draw_data)
     }
 
     // Restore modified SDL_Renderer state
-    SDL_SetRenderViewport(bd->SDLRenderer, &old.Viewport);
-    SDL_SetRenderClipRect(bd->SDLRenderer, old.ClipEnabled ? &old.ClipRect : nullptr);
+    SDL_SetRenderViewport(bd->SDLRenderer, NULL);
+    // SDL_SetRenderClipRect(bd->SDLRenderer, old.ClipEnabled ? &old.ClipRect : NULL);
+    SDL_SetRenderClipRect(bd->SDLRenderer, NULL);
 }
 
 // Called by Init/NewFrame/Shutdown
